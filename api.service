@@ -1,0 +1,12 @@
+[Unit]
+Description=ask API
+After=network.target
+
+[Service]
+User=root
+Type=simple
+WorkingDirectory=/home/mo/pydev/ask_mosstuff
+ExecStart=/home/mo/pydev/ask_mosstuff/venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 5004
+
+[Install]
+WantedBy=multi-user.target
