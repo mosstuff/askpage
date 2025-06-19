@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Ask a Question</title>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f9f9fb;
+    color: #333;
+    padding: 40px;
+    margin: 0;
+  }
+
+  h1, h2 {
+    text-align: center;
+    color: #444;
+  }
+
+  form {
+    max-width: 500px;
+    margin: 0 auto 40px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  input[type="text"] {
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    transition: border-color 0.3s;
+  }
+
+  input[type="text"]:focus {
+    border-color: #7c3aed;
+    outline: none;
+  }
+
+  .cf-turnstile {
+    align-self: center;
+  }
+
+  button {
+    padding: 12px;
+    font-size: 16px;
+    background: #7c3aed;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  button:hover {
+    background: #5b21b6;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  li {
+    background: white;
+    margin-bottom: 10px;
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+    line-height: 1.6;
+  }
+
+  li:nth-child(even) {
+    background: #f3f4f6;
+  }
+</style>
+
+</head>
+<body>
+  <h1>Ask something</h1>
+  <form id="question-form">
+        <input type="text" id="name" placeholder="Name" required />
+    <input type="text" id="question" placeholder="Your question" required />
+    <div class="cf-turnstile" data-sitekey="0x4AAAAAABHpYpsTqVzCsyAy"></div>
+    <button type="submit">Submit</button>
+  </form>
+
+  <h2>All Questions</h2>
+  <ul id="questions-list"></ul>
+
+  <script>
+    const form = document.getElementById("question-form");
+    const questionInput = document.getElementById("question");
+        const nameInput = document.getElementById("name");
+    const questionsList = document.getElementById("questions-list");
+
+    async function loadQuestions() {
+      const res = await fetch("https://ask.mosstuff.de/api/questions");
+      const questions = await res.json();
+      questionsList.innerHTML = "";
+      for (let q of questions) {
+        const item = document.createElement("li");
+        item.textContent = q.name + " asks: " + q.question + (q.answer ? " - Answer: " + q.answer : "") + " (id:" + q.id + ")";
+        questionsList.appendChild(item);
+      }
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const token = turnstile.getResponse();
+      const formData = new FormData();
+      formData.append("question", questionInput.value);
+      formData.append("turnstile_token", token);
+          formData.append("name", nameInput.value);
+      const res = await fetch("https://ask.mosstuff.de/api/submit_question", {
+        method: "POST",
+        body: formData
+      });
+      if (res.ok) {
+        questionInput.value = "";
+        turnstile.reset();
+        loadQuestions();
+      }
+    });
+
+    loadQuestions();
+  </script>
+</body>
+</html>
